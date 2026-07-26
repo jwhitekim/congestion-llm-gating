@@ -28,7 +28,7 @@ _PROVIDERS = {
 }
 
 
-def get_provider():
+def get_provider() -> ClaudeProvider | GeminiProvider:
     provider_cls = _PROVIDERS.get(config.AGENT_PROVIDER)
     if provider_cls is None:
         raise ValueError(
