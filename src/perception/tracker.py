@@ -10,10 +10,11 @@ class Tracker:
         # frame_rate는 OC-SORT가 안 쓰지만, pipeline.py 호출부(Tracker(frame_rate=fps))와
         # 인터페이스 호환을 위해 인자는 유지한다.
         #
-        # det_thresh=0.3, max_age=50, min_hits=1: 원 캡스톤 레포
+        # det_thresh=0.3, max_age=50, min_hits=1: 선행 시스템 레포
         # (jwhitekim/indoor-congestion-analysis,
-        # backend/videostream/manager/video_processor.py 27번째 줄) 실측값 그대로 —
-        # 원 논문에서 검증된 값이라 임의로 바꾸지 않는다.
+        # backend/videostream/manager/video_processor.py 27번째 줄)의 설정을 재현성
+        # 목적으로 유지한다. 현재 논문이 이 하이퍼파라미터의 최적성을 별도로
+        # 검증했다는 뜻은 아니다.
         #
         # det_thresh=0.3은 config.py의 detector conf(0.07)보다 훨씬 높다. 이 둘은
         # 서로 다른 역할이다 — detector 단계(0.07)는 "일단 넓게 잡고", tracker

@@ -14,7 +14,7 @@ YOLOv8m + OC-SORT             규칙 기반 이벤트 게이트       텍스트 
 + Line Density               (변화율·지속시간 기반)
 ```
 
-- **perception = observations, LLM = judgment.** 사람 수, 밀도, 속도 등 관측값은 perception 코드가 계산하고, LLM은 그 관측값을 바탕으로 상황 판정과 권고 행동만 생성합니다. LLM은 카메라를 직접 보지 않습니다 — 모든 입력은 숫자/텍스트 관측값입니다.
+- **perception = observations, LLM = judgment.** 사람 수, 밀도, 속도 등 관측값은 perception 코드가 계산하고, LLM은 그 관측값을 바탕으로 혼잡 상태와 대응 수준만 판정합니다. LLM은 카메라를 직접 보지 않습니다 — 모든 입력은 숫자/텍스트 관측값입니다.
 - **LLM은 규칙이 선택한 구간에서만 호출되는 단발 판정 단계입니다.** 이상 이벤트(surge/stagnation/hotspot) 또는 규칙 간 상충 사례(conflict)가 감지될 때 구조화된 텍스트 관측값으로 한 번 호출되며, 실제 행동을 집행하지 않고 대응 권고 수준만 생산합니다.
 - **perception/trigger/agent는 코드 소유권상 형제 패키지입니다.** 런타임은 `perception → trigger → LLM 단발 판정`의 단방향 흐름이며, `agent/`는 기존 LLM 판정 구현 패키지명입니다.
 
@@ -65,7 +65,7 @@ src/
 │                                ALWAYS_VISIBLE/TOOL_ONLY/NOT_EXPOSED 노출 레지스트리
 ├── perception/               perception 컴포넌트 (LLM 없음, 상시 실행)
 │   ├── detector.py              YOLO 추론
-│   ├── tracker.py                ByteTrack 래퍼
+│   ├── tracker.py                OC-SORT 래퍼 (`use_byte=True`)
 │   ├── density.py                 Line Density, 평균 속도 계산
 │   ├── zone_metrics.py             구역별 정규화 밀도 + 집중도(HHI) 계산
 │   └── pipeline.py                 프레임 스트림 → PerceptionResult 스트림
@@ -77,7 +77,7 @@ src/
 │   ├── prompt.py                   system prompt
 │   ├── schema.py                    LLM 출력 검증 + 금지 필드(숫자 카운트) 제거
 │   ├── providers/                    프로바이더 registry (anthropic/gemini, duck-typing)
-│   └── tools/                        현재 비어있음 — TOOL_ONLY가 채워지면 여기 추가
+│   └── tools/                        현재 비어있음 — 향후 tool-use 기반 복원 시 사용
 └── io_utils/
     ├── sampler.py                  영상 → 프레임 스트림
     ├── reporter.py                  터미널 출력 (rich)
@@ -90,7 +90,7 @@ scripts/
 
 perception, trigger, agent, io_utils는 `src/` 밑에 형제로 위치하며 어느 것도 다른 것 밑에 종속되지 않습니다 — 이 위계가 필요한 이유는 .claude/CLAUDE.md 1절을 참고하시기 바랍니다. `agent/` 폴더는 시스템 전체가 아니라 선택적 LLM 판정 구현만 담습니다.
 
-`agent/tools/`는 지금 비어있습니다. `track_people` tool이 있었으나 `_facts_to_text`가 넘기는 정보와 완전히 중복돼(no-op) 삭제했습니다. 어떤 필드를 LLM에게 어떤 경로로 보여줄지는 `datatypes.py`의 노출 레지스트리 한 곳에서만 결정하며, tool은 `TOOL_ONLY`가 채워질 때만 다시 필요해집니다.
+`agent/tools/`는 지금 비어있습니다. `track_people` tool이 있었으나 `_facts_to_text`가 넘기는 정보와 완전히 중복돼(no-op) 삭제했습니다. 어떤 필드를 LLM에게 어떤 경로로 보여줄지는 `datatypes.py`의 노출 레지스트리 한 곳에서만 결정합니다. 향후 `TOOL_ONLY`가 채워지면 provider와 `agent/loop.py`의 tool-use 기반도 함께 복원해야 하며, 현재 registry만으로 LLM이 도구를 호출하지는 않습니다.
 
 ## 트리거 조건 (`config.py`)
 

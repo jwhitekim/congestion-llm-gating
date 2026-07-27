@@ -1,6 +1,9 @@
 """
-Phase 2 Step 1 — tracker 유실률의 원인이 "OCSort use_byte=False 때문에 conf 0.07~0.3
-구간 detection이 통째로 버려지는 것"이라는 가설을 정량 검증하는 스크립트.
+Phase 2 Step 1에서 수행한 과거 진단 — tracker 유실률의 원인이
+"OCSort use_byte=False 때문에 conf 0.07~0.3 구간 detection이 통째로
+버려지는 것"이라는 가설을 정량 검증하는 스크립트.
+
+현재 `perception/tracker.py`는 이 진단 결과를 반영해 `use_byte=True`다.
 
 tracker.py 주석에 이미 적혀있던 사실: OCSort 기본값 use_byte=False라서 conf가
 det_thresh(0.3) 미만인 detection은 새 트랙 생성에도, 기존 트랙 매칭에도 전혀
@@ -11,8 +14,8 @@ diagnose_detector.py의 Detector/_RawDetector/VIDEO_PATH/COMPARE_FRAMES를 그�
 재사용한다 — 같은 영상, 같은 프레임 수, 같은 detect() 인터페이스라야 이전
 raw_box/confirmed_track 결과와 비교 가능하다.
 
-코드 변경 없이 raw_box를 confidence로 버킷만 나눠 센다 — tracker는 아직 호출하지
-않는다 (Step 2에서 use_byte=True 테스트할 때 호출).
+이 스크립트 자체는 raw_box를 confidence 버킷으로만 나눠 세며 tracker를 호출하지
+않는다. 아래 설명의 Step 2는 당시 진단 순서를 가리킨다.
 
 사용법: YOLO_MODEL_CHOICE=fine_tuned PYTHONPATH=src python scripts/diagnose_conf_buckets.py
 """

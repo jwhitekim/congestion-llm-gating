@@ -8,7 +8,7 @@ result.plot() 등 진단에 필요한 raw 접근이 필요해서다.
 
 추가로 앞 COMPARE_FRAMES 프레임을 순회하며 detector.detect()의 raw box 개수와
 tracker.update()의 confirmed track 개수를 비교한다. raw box는 많은데
-confirmed track이 적으면 detector가 아니라 tracker(ByteTrack) 단계에서
+confirmed track이 적으면 detector가 아니라 tracker(OC-SORT) 단계에서
 유실되고 있다는 뜻이다 — capdi는 실제 Detector 클래스를 그대로 쓰고
 (모델 경로가 config에 고정돼 있어서), COCO 비교군은 동일한 detect()
 인터페이스를 갖는 _RawDetector로 모델 경로만 바꿔 낀다. tracker는 두
@@ -136,7 +136,7 @@ def _compare_detector_vs_tracker(label: str, detector, video_path: str, fps: flo
         cap.release()
 
     # raw box는 꾸준히 나오는데 confirmed track만 낮게 유지되면 detector가 아니라
-    # tracker(ByteTrack의 confirmation/activation 로직) 단계에서 유실되고 있다는 뜻.
+    # tracker(OC-SORT의 confirmation/association 로직) 단계에서 유실되고 있다는 뜻.
     # 반대로 raw box 자체가 낮으면 detector(모델 가중치/conf) 쪽 문제다.
 
 
