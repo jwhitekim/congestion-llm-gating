@@ -1,5 +1,5 @@
 """
-single-shot 판정 호출.
+규칙 기반 이벤트가 발생한 구간의 선택적 LLM 단발 판정.
 
 LLM은 판단(assessment, reasoning, action)만 생산한다.
 숫자 사실(total_people, density 등)은 LLM 출력 스키마에 없으며
@@ -125,7 +125,7 @@ def run(
     include_trigger_reason: bool = True,
 ) -> dict:
     """
-    트리거 발생 시 에이전트를 1회 호출해 판정한다 (single-shot, tool 없음).
+    트리거 발생 시 텍스트 LLM을 1회 호출해 판정한다 (single-shot, tool 없음).
 
     trigger_reason: trigger/rules.py가 산출한 정량적 트리거 근거 문자열
     (예: "density 22.9 > avg × 1.4, ratio=1.60"). 이미 문자열이라 숫자

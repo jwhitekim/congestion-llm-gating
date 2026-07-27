@@ -1,12 +1,17 @@
 """
 trigger_reason 프롬프트 주입 효과 A/B 비교.
 
-배경: agent/loop.py의 run()은 트리거 발생 시 "트리거 발생: {trigger_name} ({trigger_reason})"
+배경: 선택적 LLM 판정 함수인 agent/loop.py의 run()은 트리거 발생 시
+"트리거 발생: {trigger_name} ({trigger_reason})"
 형태로 trigger_reason(예: "density 28.0 > avg 17.5 × 1.4 (ratio=1.60)")을 프롬프트에 넣는다.
 이 문장은 이미 _facts_to_text()가 보여주는 raw 수치(density, density_delta_ratio,
 zone_counts 등)에서 유도 가능한 결론을 자연어로 미리 요약해 준 것 — 즉 "새 정보"가 아니라
 "이미 보여준 수치의 재서술"이다. 이 스크립트는 그 재서술이 LLM 판단 품질에 실제로
 기여하는지(A/B) 검증한다.
+
+이 비교는 trigger_reason 문장 유무만 다룬다. trigger_name과 "트리거가 이미 이상
+신호를 감지했다"는 system prompt는 두 조건에 공통이므로, 트리거 정보 전체의
+프라이밍 효과를 제거하거나 측정하는 실험은 아니다.
 
 - A (no_reason): include_trigger_reason=False — trigger_name만, reason 문장 제외
 - B (with_reason): include_trigger_reason=True — 기존 기본 동작

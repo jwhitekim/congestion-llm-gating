@@ -1,7 +1,7 @@
 """
-합성 probe case로 agent 출력이 입력(crowd size/zone 분포)에 따라 실제로
+합성 probe case로 LLM 판정이 입력(crowd size/zone 분포)에 따라 실제로
 차별화되는지 확인하는 스크립트. PerceptionPipeline/trigger를 거치지 않고
-AggregatedFacts를 직접 구성해 agent_loop.run()을 호출한다.
+AggregatedFacts를 직접 구성해 선택적 판정 함수인 agent_loop.run()을 호출한다.
 
 실제 LLM API를 호출한다 (비용 발생, probe 5개 x 최대 2왕복 = 소량).
 Day5-6 케이스 스터디에서 판단 일관성 재검증 시에도 이 스크립트를 재사용한다.

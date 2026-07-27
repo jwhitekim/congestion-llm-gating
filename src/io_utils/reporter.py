@@ -42,7 +42,7 @@ def report_segment(
     else:
         console.print(f" [bold green]TRIGGER    [/bold green] — (정상)  level=[bold]{level}[/bold]")
 
-    # AGENT — 트리거가 없을 때 'AGENT skip'이 명시적으로 보여야 한다
+    # 기존 터미널 라벨 AGENT는 선택적 LLM 판정 단계와 호출 생략 여부를 표시한다.
     if agent_output:
         console.print(
             f" [bold magenta]AGENT      [/bold magenta]"

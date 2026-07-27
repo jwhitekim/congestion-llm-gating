@@ -18,3 +18,4 @@ models/
 # Run outputs
 outputs/
 nohup.out
+*.pdf

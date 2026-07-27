@@ -17,7 +17,7 @@ class PerceptionResult:
 
 @dataclass
 class AggregatedFacts:
-    """trigger/agent에 전달되는 집계 사실. 변화량 포함."""
+    """규칙 기반 이벤트 게이트와 선택적 LLM 판정에 전달되는 집계 관측값."""
     current: PerceptionResult
     density_delta_ratio: float  # current.density / 직전 이동평균 (1.0 = 변화 없음)
     speed_trend: float          # 양수 = 가속, 음수 = 감속 (선형회귀 기울기)

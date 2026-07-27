@@ -79,7 +79,8 @@ class SessionFileManager:
             # (fallback|percentile) — trigger/rules.py의 _dynamic_thresholds() 참고.
             # 언제부터 percentile로 전환됐는지 나중에 여기서 확인한다.
             "dynamic_thresholds": thresholds,
-            "agent": agent_output,  # None이면 그대로 null로 저장
+            # "agent"는 기존 결과 스키마 필드명. 값은 선택적 LLM 단발 판정 결과다.
+            "agent": agent_output,  # 미호출 구간은 null
         }
         self._results_fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
         self._results_fh.flush()

@@ -1,7 +1,7 @@
 """
-agent 호출 병목 분석 스크립트.
+선택적 LLM 호출 병목 분석 스크립트.
 
-results.jsonl에서 agent가 호출된 세그먼트(entry["agent"] is not None)만 추려
+results.jsonl에서 LLM이 호출된 세그먼트(entry["agent"] is not None)만 추려
 api_call_breakdown 필드를 바탕으로:
   - 왕복 1회당 평균 소요 시간
   - 왕복 횟수 분포 (1회/2회/3회 이상)
@@ -50,10 +50,10 @@ def main() -> None:
                 agent_segments.append(entry)
 
     if not agent_segments:
-        print("agent가 호출된 세그먼트가 없습니다 (트리거 미발생).")
+        print("LLM이 호출된 세그먼트가 없습니다 (트리거 미발생).")
         return
 
-    print(f"agent 호출 세그먼트 수: {len(agent_segments)}\n")
+    print(f"LLM 호출 세그먼트 수: {len(agent_segments)}\n")
 
     all_round_trips: list[dict] = []
     round_trip_counts: list[int] = []
@@ -110,7 +110,7 @@ def main() -> None:
     # --- 종합 판정 ---
     print("=== 종합 ===")
     print(f"  평균 왕복 시간: {mean(elapsed_list):.3f}초 x 평균 왕복 횟수: {mean(round_trip_counts):.2f}회")
-    print(f"  ≈ agent 호출당 평균 API 시간: {mean(elapsed_list) * mean(round_trip_counts):.3f}초")
+    print(f"  ≈ LLM 호출당 평균 API 시간: {mean(elapsed_list) * mean(round_trip_counts):.3f}초")
 
 
 if __name__ == "__main__":

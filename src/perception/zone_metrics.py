@@ -2,9 +2,9 @@
 zone별 정규화 밀도 + 전체 집중도 계산.
 
 perception 계층의 상시 파이프라인 일부다. 매 세그먼트 pipeline._build_result()에서
-규칙 기반으로 계산되며 LLM은 전혀 개입하지 않는다. agent/tools/의 "tool"(LLM이 루프
-중 호출하는 것)과 혼동하지 말 것 — 이 모듈의 함수는 LLM이 호출하지 않고, perception이
-매 세그먼트 자동으로 실행해 PerceptionResult에 실어 보내는 사실(fact) 생산기다.
+규칙 기반으로 계산되며 LLM은 전혀 개입하지 않는다. agent/tools/의 "tool"(향후 LLM
+판정 과정에서 필요에 따라 호출할 수 있는 것)과 혼동하지 말 것 — 이 모듈의 함수는
+perception이 매 세그먼트 자동으로 실행해 PerceptionResult에 실어 보내는 관측값 생산기다.
 """
 
 

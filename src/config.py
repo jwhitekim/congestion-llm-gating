@@ -49,7 +49,7 @@ DENSITY_LOW_PERCENTILE = 50
 DENSITY_HIGH_PERCENTILE = 90
 ZONE_MAX_PERCENTILE = 90
 
-# --- Agent ---
+# --- Selective LLM judgment (legacy AGENT_* identifiers retained) ---
 AGENT_PROVIDER = os.getenv("AGENT_PROVIDER", "anthropic")  # "anthropic" | "gemini"
 AGENT_MAX_RETRIES = 3        # API 레벨 실패(네트워크/rate limit/서버 오류) 재시도 횟수
 AGENT_RETRY_BACKOFF_SEC = 1.0  # 첫 재시도 대기 시간(초). 매 재시도마다 2배 증가

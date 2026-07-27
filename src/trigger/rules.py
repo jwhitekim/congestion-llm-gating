@@ -58,8 +58,8 @@ def evaluate(
 
     4개 조건(surge/stagnation/hotspot/conflict)을 모두 독립적으로 평가한다.
     trigger_name은 그중 surge→stagnation→hotspot→conflict 우선순위로 하나만
-    골라 반환한다(기존 동작과 100% 동일 — main.py의 단일 호출 분기, agent
-    호출 여부, 프롬프트 전부 안 바뀐다). co_triggered는 trigger_name으로
+    골라 반환한다(기존 동작과 100% 동일 — main.py의 LLM 단일 호출 분기와
+    프롬프트는 바뀌지 않는다). co_triggered는 trigger_name으로
     선택되지 않았지만 같은 세그먼트에서 동시에 조건을 만족한 다른 트리거
     이름들이다 — 순수 기록용이며 트리거 판정 로직 자체에는 영향을 주지
     않는다(실측: t=455에서 surge와 hotspot이 동시에 만족됐는데 기존

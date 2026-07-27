@@ -2,10 +2,10 @@
 파이프라인 오케스트레이션.
 
 설계 원칙:
-  perception → trigger → (트리거 시에만) agent
+  perception → trigger → (트리거 구간만) LLM 단발 판정
 
-에이전트가 매 세그먼트가 아닌 트리거 시에만 깨는지가
-코드 흐름에서 명확히 보여야 한다.
+인지 계층은 모든 구간에서 관측값을 계산하고, 규칙 기반 이벤트 게이트가
+선택한 구간에서만 텍스트 LLM을 한 번 호출하는 흐름이 명확히 보여야 한다.
 """
 
 import sys
@@ -43,7 +43,7 @@ def main(video_path: str) -> None:
                 f"trigger={trigger_name or '-'} thresholds={thresholds['source']}"
             )
 
-            # ── 3단계: Agent (트리거 시에만 소환) ──────────────────────────
+            # ── 3단계: 선택적 LLM 단발 판정 (트리거 구간만) ────────────────
             agent_output = None
             if trigger_name is not None:
                 agent_start = time.perf_counter()
@@ -53,8 +53,8 @@ def main(video_path: str) -> None:
                 agent_elapsed = time.perf_counter() - agent_start
                 agent_output["agent_elapsed_sec"] = round(agent_elapsed, 3)
                 agent_output["api_round_trips"] = len(agent_output["api_call_breakdown"])
-            # trigger_name이 None이면 에이전트는 호출되지 않는다.
-            # 이 분기가 설계의 핵심: 에이전트는 상시 감시자가 아니다.
+            # trigger_name이 None이면 LLM을 호출하지 않고 관측값만 기록한다.
+            # 이 분기가 논문의 규칙 기반 선택적 호출을 구현한다.
 
             # ── 터미널 출력 (사람용) ────────────────────────────────────────
             report_segment(perception_result, trigger_name, trigger_reason, agg_facts.level, agent_output)

@@ -1,5 +1,6 @@
 """
-Anthropic Claude 프로바이더 (single-shot — tool 없음, datatypes.TOOL_ONLY 참고).
+선택적 LLM 단발 판정을 위한 Anthropic Claude 프로바이더
+(tool 없음, datatypes.TOOL_ONLY 참고).
 이 클래스는 다른 provider와 인터페이스를 상속하지 않는다 — init_state/send/
 extract_text/extract_usage/is_retryable 5개 메서드만 맞추면 agent/loop.py가
 그대로 돌린다(duck typing).
