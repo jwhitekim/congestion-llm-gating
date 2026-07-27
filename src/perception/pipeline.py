@@ -30,6 +30,9 @@ class PerceptionPipeline:
         self._segment_start: float = 0.0
         self._segment_cv_elapsed: float = 0.0  # 이번 세그먼트 구간의 detect+track 누적 시간
         self._initialized = False  # 첫 프레임 타임스탬프로 segment_start 세팅
+        self._last_tracked = []
+        self._last_frame_width: int = 0
+        self._last_timestamp: Optional[float] = None
 
     def feed(self, timestamp: float, frame: np.ndarray) -> Optional[PerceptionResult]:
         """
@@ -52,6 +55,10 @@ class PerceptionPipeline:
             cy = (int(obj[1]) + int(obj[3])) // 2
             self.track_trails[track_id].append((cx, cy))
 
+        self._last_tracked = tracked
+        self._last_frame_width = w
+        self._last_timestamp = timestamp
+
         if timestamp - self._segment_start >= config.SEGMENT_INTERVAL:
             result = self._build_result(timestamp, tracked, w, self._segment_cv_elapsed)
             self._segment_start = timestamp
@@ -59,6 +66,21 @@ class PerceptionPipeline:
             return result
 
         return None
+
+    def flush(self) -> Optional[PerceptionResult]:
+        """
+        영상 스트림이 끝난 뒤 SEGMENT_INTERVAL을 채우지 못한 마지막 자투리 구간을 방출한다.
+        방출할 자투리가 없으면 None.
+        """
+        if self._last_timestamp is None or self._last_timestamp <= self._segment_start:
+            return None
+
+        result = self._build_result(
+            self._last_timestamp, self._last_tracked, self._last_frame_width, self._segment_cv_elapsed
+        )
+        self._segment_start = self._last_timestamp
+        self._segment_cv_elapsed = 0.0
+        return result
 
     def _build_result(self, timestamp: float, tracked, frame_width: int, cv_elapsed_sec: float) -> PerceptionResult:
         total = len(tracked)

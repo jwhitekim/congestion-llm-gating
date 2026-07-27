@@ -32,13 +32,7 @@ def main(video_path: str) -> None:
         history = SegmentHistory()
         threshold_history = ThresholdHistory()
 
-        for timestamp, frame in iter_frames(video_path):
-
-            # ── 1단계: Perception (항상 실행) ──────────────────────────────
-            perception_result = pipeline.feed(timestamp, frame)
-            if perception_result is None:
-                continue  # 아직 세그먼트 인터벌 미달
-
+        def process_segment(perception_result) -> None:
             # ── 2단계: Trigger (항상 실행) ─────────────────────────────────
             trigger_name, trigger_reason, agg_facts, co_triggered, thresholds = rules.evaluate(
                 perception_result, history, threshold_history
@@ -69,6 +63,18 @@ def main(video_path: str) -> None:
             session.write_segment(
                 perception_result, trigger_name, trigger_reason, agg_facts, agent_output, co_triggered, thresholds
             )
+
+        for timestamp, frame in iter_frames(video_path):
+            # ── 1단계: Perception (항상 실행) ──────────────────────────────
+            perception_result = pipeline.feed(timestamp, frame)
+            if perception_result is None:
+                continue  # 아직 세그먼트 인터벌 미달
+            process_segment(perception_result)
+
+        # ── 영상 종료: SEGMENT_INTERVAL을 못 채운 마지막 자투리 구간 처리 ──
+        tail_result = pipeline.flush()
+        if tail_result is not None:
+            process_segment(tail_result)
     except Exception:
         log.exception("파이프라인 실행 중 예외 발생")
         raise
