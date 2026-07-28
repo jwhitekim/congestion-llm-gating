@@ -54,7 +54,8 @@ def evaluate(
     그 출처(fallback|percentile) — _dynamic_thresholds() 참고. session.jsonl에
     그대로 기록해 언제부터 percentile로 전환됐는지 나중에 확인할 수 있게 한다.
 
-    순간값이 아닌 변화율·지속시간 기반 조건을 사용한다.
+    surge/stagnation/conflict는 변화율·지속시간·추세를 사용하고, hotspot은
+    구역 인원이 동적 zone_max를 넘는 순간값 조건이다.
 
     4개 조건(surge/stagnation/hotspot/conflict)을 모두 독립적으로 평가한다.
     trigger_name은 그중 surge→stagnation→hotspot→conflict 우선순위로 하나만
@@ -88,7 +89,7 @@ def evaluate(
     history.add(current)
     threshold_history.add(current.density, current.zone_counts)
 
-    # --- 트리거 조건: 순간값이 아니라 변화·지속 기반 ---
+    # --- 논문 표 1의 네 트리거 조건 ---
     # 4개 다 독립적으로 판정해 matched에 모아둔다(첫 매치에서 멈추지 않음).
     # dict 삽입 순서 = surge→stagnation→hotspot→conflict 우선순위 순서와 같으므로
     # 아래에서 우선순위를 고를 때도, co_triggered를 나열할 때도 이 순서를 그대로 쓴다.

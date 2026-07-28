@@ -1,14 +1,18 @@
 """
-bare_react_agent.py — 맨몸 ReAct 루프 (Step 1)
+simple_react.py — 최소 ReAct 학습 예제
 
 프레임워크 없이, Claude API + while 루프만으로 만든 최소 에이전트.
 이 한 파일이 "에이전트라는 기계"의 가장 작은 완성형이다.
+
+독립 학습 예제이며 `src/main.py`의 규칙 기반 선택적 LLM 호출 워크플로우에는
+import되거나 실행되지 않는다. 이 스크립트의 ReAct/tool-use를 논문 시스템의
+현재 기능으로 서술하지 않는다.
 
 실행 전:
     pip install anthropic
     export ANTHROPIC_API_KEY="sk-..."        # Windows(cmd): set ANTHROPIC_API_KEY=...
 실행:
-    python bare_react_agent.py
+    python scripts/simple_react.py
 """
 
 import os

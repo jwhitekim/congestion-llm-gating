@@ -56,7 +56,7 @@ def main(video_path: str) -> None:
         threshold_history = ThresholdHistory()
 
         def process_segment(perception_result) -> None:
-            # ── 2단계: Trigger (항상 실행, main.py와 동일 — 규칙 로직 안 바뀜) ──
+            # ── 규칙 기반 이벤트 게이트 (main.py와 같은 규칙 판정) ─────────
             trigger_name, trigger_reason, agg_facts, co_triggered, thresholds = rules.evaluate(
                 perception_result, history, threshold_history
             )
@@ -67,7 +67,7 @@ def main(video_path: str) -> None:
                 f"trigger={trigger_name or '-'} thresholds={thresholds['source']} (always-call)"
             )
 
-            # ── 3단계: LLM 단발 판정 — 게이팅 없이 매 세그먼트 호출 ──────
+            # ── LLM 단발 판정 — 게이팅 없이 매 세그먼트 호출 ──────────────
             # LLM에게 보내는 라벨/사유만 중립화하고, 그 외 agent_loop.run() 호출
             # 방식(agg_facts, zone_max 등)은 선택적 호출 경로와 동일하게 유지한다.
             call_label = trigger_name if rule_matched else NEUTRAL_LABEL
@@ -79,6 +79,8 @@ def main(video_path: str) -> None:
             )
             agent_elapsed = time.perf_counter() - agent_start
             agent_output["agent_elapsed_sec"] = round(agent_elapsed, 3)
+            # 기존 필드명은 유지하지만 값은 성공 응답 기록 수다. 실패한 전송
+            # 재시도는 api_call_breakdown에 별도 원소로 남지 않는다.
             agent_output["api_round_trips"] = len(agent_output["api_call_breakdown"])
             # 사후 분석 전용 필드 — LLM 호출 이후에 채워 넣으므로 프롬프트에는 노출되지 않는다.
             agent_output["rule_matched"] = rule_matched
@@ -93,7 +95,7 @@ def main(video_path: str) -> None:
             )
 
         for timestamp, frame in iter_frames(video_path):
-            # ── 1단계: Perception (항상 실행, main.py와 동일) ──────────────
+            # ── 사람 검출·추적 및 구역별 통계 (main.py와 동일) ────────────
             perception_result = pipeline.feed(timestamp, frame)
             if perception_result is None:
                 continue

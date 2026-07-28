@@ -6,7 +6,9 @@
 
 ## 핵심 아이디어
 
-이 시스템은 세 컴포넌트로 구성됩니다.
+논문은 영상 스트림, 사람 검출·추적, 구역별 통계, 규칙 기반 이벤트 게이트,
+선택적 LLM 단발 판정의 다섯 동작 단계로 설명합니다. 코드 소유권에서는 이를
+perception, trigger, LLM 판정 구현의 세 핵심 계층으로 묶습니다.
 
 ```
 perception (모든 구간)  →  trigger (모든 구간)  →  LLM 단발 판정 (트리거 구간만)
@@ -15,10 +17,10 @@ YOLOv8m + OC-SORT             규칙 기반 이벤트 게이트       텍스트 
 ```
 
 - **perception = observations, LLM = judgment.** 사람 수, 밀도, 속도 등 관측값은 perception 코드가 계산하고, LLM은 그 관측값을 바탕으로 혼잡 상태와 대응 수준만 판정합니다. LLM은 카메라를 직접 보지 않습니다 — 모든 입력은 숫자/텍스트 관측값입니다.
-- **LLM은 규칙이 선택한 구간에서만 호출되는 단발 판정 단계입니다.** 이상 이벤트(surge/stagnation/hotspot) 또는 규칙 간 상충 사례(conflict)가 감지될 때 구조화된 텍스트 관측값으로 한 번 호출되며, 실제 행동을 집행하지 않고 대응 권고 수준만 생산합니다.
+- **LLM은 규칙이 선택한 구간에서만 호출되는 단발 판정 단계입니다.** 혼잡 이벤트(surge/stagnation/hotspot) 또는 상태와 추세가 상충하는 경계 사례(conflict)가 감지될 때 구조화된 텍스트 관측값으로 한 번 판정하며, 실제 행동을 집행하지 않고 대응 권고 수준만 생산합니다. 여기서 단발 판정은 세그먼트당 판단 1회를 뜻하며, 일시적인 API 실패에 대한 전송 재시도와는 구분합니다.
 - **perception/trigger/agent는 코드 소유권상 형제 패키지입니다.** 런타임은 `perception → trigger → LLM 단발 판정`의 단방향 흐름이며, `agent/`는 기존 LLM 판정 구현 패키지명입니다.
 
-> 과거에는 "tools = facts, LLM = judgment"를 슬로건으로 썼습니다. 지금은 `agent/tools/`가 비어있고 관측값을 실제로 만드는 주체가 perception이라, 대표 슬로건을 `perception = observations, LLM = judgment`로 바꿨습니다. 설계 철학과 향후 tool 복원 시 확장 방향은 .claude/CLAUDE.md 3절을 참고하시기 바랍니다.
+> 과거에는 "tools = facts, LLM = judgment"를 슬로건으로 썼습니다. 지금은 등록된 관측 도구와 tool-use 호출 경로가 없고 관측값을 실제로 만드는 주체가 perception이라, 대표 슬로건을 `perception = observations, LLM = judgment`로 바꿨습니다. 설계 철학과 향후 tool 복원 시 확장 방향은 .claude/CLAUDE.md 3절을 참고하시기 바랍니다.
 
 > 현재 구현의 논문 기준 명칭은 **규칙 기반 선택적 LLM 호출 워크플로우**입니다. `agent/`, `agent_output`, `AGENT_PROVIDER`의 `agent`는 기존 코드 식별자이며 현재 시스템을 자율 에이전트나 에이전틱 워크플로우로 분류한다는 뜻이 아닙니다. 상태 관리·도구 선택·후속 행동을 포함하는 에이전트형 시스템은 향후 확장 범위입니다.
 
@@ -33,6 +35,12 @@ make install   # dashboard/ npm 의존성 설치
 
 LLM 판정에는 `ANTHROPIC_API_KEY` 환경변수가 필요합니다(`anthropic` SDK, 기본 모델: `claude-sonnet-4-6`, `ANTHROPIC_MODEL`로 override 가능). 실험적으로 Gemini도 지원합니다 — `AGENT_PROVIDER=gemini`로 설정하면 `google-genai` SDK로 기본 `gemini-3.5-flash`(`GEMINI_MODEL`로 override 가능, `GEMINI_API_KEY` 필요)를 대신 호출합니다. 두 프로바이더 모두 `agent/providers/`의 duck-typing 인터페이스(`init_state/send/extract_text/extract_usage/is_retryable`)만 구현하면 되므로, 새 프로바이더를 추가해도 `agent/loop.py`는 건드릴 필요가 없습니다.
 
+논문 실험은 `gemini-3.1-flash-lite`, temperature 0으로 수행됐습니다. 이는 현재
+기본 provider/model 설정과 다르며, 현재 Gemini 호출 코드도 temperature를 명시하지
+않습니다. `session.json`의 현재 config snapshot에도 provider/model/temperature가
+기록되지 않습니다. 따라서 현재 기본 설정이나 과거 세션 파일만으로 논문 실험
+설정이 재현됐다고 간주할 수 없습니다.
+
 API 호출은 네트워크/rate limit/서버 오류에 한해 지수 백오프로 자동 재시도합니다(`config.AGENT_MAX_RETRIES`, 기본 3회). LLM 판단 자체의 재시도(self-correction)와는 무관합니다.
 
 ## 실행
@@ -44,7 +52,7 @@ make run VIDEO=videos/supermarket.mp4     # 다른 영상 지정
 
 `make run`은 `PYTHONPATH=src python src/main.py $(VIDEO)`를 실행합니다 — 패키지 설치 없이 `src/`를 `PYTHONPATH`에 직접 넣는 구조라 `make` 없이도 그 명령을 직접 실행하면 동일하게 동작합니다.
 
-실행마다 `outputs/<timestamp>/` 세션 폴더가 새로 생성됩니다. `session.json`은 세션 메타데이터(시작/종료 시각, config snapshot)를, `results.jsonl`은 세그먼트별 결과를 한 줄씩 즉시 기록합니다 — 트리거되지 않은 세그먼트도 기존 스키마 필드인 `agent: null`로 포함하고, 트리거가 발생했다면 `trigger_reason`도 함께 남깁니다. 현재 선택적 호출 프롬프트에는 트리거 이름과 정량적 근거가 포함되며, 이 정보가 LLM 판정에 영향을 줄 수 있다는 점은 논문의 한계입니다. `scripts/ab_trigger_reason.py`는 그중 정량적 `trigger_reason` 문장 유무만 비교하며 트리거 프라이밍 전체를 제거하는 실험은 아닙니다.
+실행마다 `outputs/<timestamp>/` 세션 폴더가 새로 생성됩니다. `session.json`은 세션 메타데이터(시작/종료 시각, 일부 임계값의 config snapshot)를, `results.jsonl`은 세그먼트별 결과를 한 줄씩 즉시 기록합니다 — 트리거되지 않은 세그먼트도 기존 스키마 필드인 `agent: null`로 포함하고, 트리거가 발생했다면 `trigger_reason`도 함께 남깁니다. 현재 선택적 호출 프롬프트에는 트리거 이름과 정량적 근거가 포함되며, 이 정보가 LLM 판정에 영향을 줄 수 있다는 점은 논문의 한계입니다. `scripts/ab_trigger_reason.py`는 그중 정량적 `trigger_reason` 문장 유무만 비교하며 트리거 프라이밍 전체를 제거하는 실험은 아닙니다.
 
 결과 시각화 대시보드는 [`dashboard/`](./dashboard)를 참고하시기 바랍니다.
 
@@ -77,7 +85,7 @@ src/
 │   ├── prompt.py                   system prompt
 │   ├── schema.py                    LLM 출력 검증 + 금지 필드(숫자 카운트) 제거
 │   ├── providers/                    프로바이더 registry (anthropic/gemini, duck-typing)
-│   └── tools/                        현재 비어있음 — 향후 tool-use 기반 복원 시 사용
+│   └── tools/                        비활성 registry만 존재 — 등록 도구/호출 경로 없음
 └── io_utils/
     ├── sampler.py                  영상 → 프레임 스트림
     ├── reporter.py                  터미널 출력 (rich)
@@ -90,7 +98,7 @@ scripts/
 
 perception, trigger, agent, io_utils는 `src/` 밑에 형제로 위치하며 어느 것도 다른 것 밑에 종속되지 않습니다 — 이 위계가 필요한 이유는 .claude/CLAUDE.md 1절을 참고하시기 바랍니다. `agent/` 폴더는 시스템 전체가 아니라 선택적 LLM 판정 구현만 담습니다.
 
-`agent/tools/`는 지금 비어있습니다. `track_people` tool이 있었으나 `_facts_to_text`가 넘기는 정보와 완전히 중복돼(no-op) 삭제했습니다. 어떤 필드를 LLM에게 어떤 경로로 보여줄지는 `datatypes.py`의 노출 레지스트리 한 곳에서만 결정합니다. 향후 `TOOL_ONLY`가 채워지면 provider와 `agent/loop.py`의 tool-use 기반도 함께 복원해야 하며, 현재 registry만으로 LLM이 도구를 호출하지는 않습니다.
+`agent/tools/`에는 자동 등록 registry만 남아 있고 등록된 도구는 없습니다. `track_people` tool이 있었으나 `_facts_to_text`가 넘기는 정보와 완전히 중복돼(no-op) 삭제했습니다. 어떤 필드를 LLM에게 어떤 경로로 보여줄지는 `datatypes.py`의 노출 레지스트리 한 곳에서만 결정합니다. 향후 `TOOL_ONLY`가 채워지면 provider와 `agent/loop.py`의 tool-use 기반도 함께 복원해야 하며, 현재 registry만으로 LLM이 도구를 호출하지는 않습니다.
 
 ## 트리거 조건 (`config.py`)
 
@@ -107,7 +115,39 @@ surge/stagnation은 변화율 또는 지속시간 기준입니다. conflict는 "
 
 **`density_slope`/`speed_trend`는 초당이 아니라 세그먼트당 선형회귀 기울기입니다**(`trigger/history.py`, x축이 시간이 아니라 세그먼트 인덱스). `CONFLICT_SLOPE_MIN=0.4`의 의미는 `SEGMENT_INTERVAL`(현재 5초)에 종속적이므로, `SEGMENT_INTERVAL`을 바꾸면 `CONFLICT_SLOPE_MIN`도 재보정해야 합니다.
 
-**트리거 우선순위와 반복 호출 계약이 명시돼 있지 않습니다.** `trigger/rules.py`는 네 조건을 모두 평가한 뒤 surge→stagnation→hotspot→conflict 순서로 대표 트리거 하나를 반환하고, 나머지는 `co_triggered`에 기록합니다. cooldown이 없어서 같은 이상 상황이 여러 세그먼트 지속되면 매 세그먼트 LLM을 다시 호출합니다. 논문의 호출량 감소는 이 현재 동작에서 측정된 결과이며 이벤트당 1회 호출을 뜻하지 않습니다.
+**트리거 우선순위와 반복 호출 계약이 명시돼 있지 않습니다.** `trigger/rules.py`는 네 조건을 모두 평가한 뒤 surge→stagnation→hotspot→conflict 순서로 대표 트리거 하나를 반환하고, 나머지는 `co_triggered`에 기록합니다. cooldown이 없어서 같은 상황이 여러 세그먼트 지속되면 매 세그먼트 LLM을 다시 호출합니다. 논문의 101회는 이벤트 에피소드 수가 아니라 선택된 분석 구간 수입니다.
+
+## 논문 실험 결과와 해석 범위
+
+Mall Dataset 2,000프레임을 순서대로 1 fps 영상으로 재구성하고 5초 단위
+400개 구간으로 분석했습니다. YOLOv8m과 OC-SORT를 적용하고
+`gemini-3.1-flash-lite`, temperature 0으로 판정한 결과는 다음과 같습니다.
+
+| 규칙 선택 여부 | caution/anomaly | normal | 합계 |
+| --- | ---: | ---: | ---: |
+| 선택 구간 | 101 | 0 | 101 |
+| 미선택 구간 강제 평가 | 105 | 194 | 299 |
+| 합계 | 206 | 194 | 400 |
+
+선택적 방식은 400개 중 101개 구간에서 LLM을 호출하여 always-call 대비
+**호출량을 74.8% 줄였습니다**. 이는 실제 비용·토큰·지연이 같은 비율로
+감소했다는 결과가 아닙니다. 또한 미선택 구간에서도 105개의
+`caution/anomaly` 출력이 있었고 객관적 혼잡 정답 라벨이 없으므로, 필요한
+호출을 모두 보존했거나 혼잡 탐지 정확도가 향상됐다고 해석할 수 없습니다.
+
+표의 선택·미선택 출력 분포는 always-call 결과를 규칙 선택 여부로 나눠 얻습니다.
+선택적 실행 결과만으로는 호출하지 않은 299개 구간의 LLM 출력을 계산할 수 없습니다.
+
+## 논문과 현재 브랜치의 차이
+
+- 논문은 세그먼트 시각도 LLM 입력에 포함했다고 서술하지만, 현재
+  `datatypes.NOT_EXPOSED`는 `timestamp`를 판정 입력에서 제외합니다.
+- 현재 Gemini 호출은 temperature를 명시하지 않으며, 세션 메타데이터에도
+  provider/model/temperature가 남지 않습니다.
+- 현재 구현에는 `N < 3`일 때 density를 0으로 두는 예외, OC-SORT의
+  `asso_func="ct_dist"`/`use_byte=True`, conflict의 `total > 0` 가드,
+  영상 끝의 미완성 구간을 방출하는 `flush()`가 있습니다. 이 세부 구현을 논문
+  실험과 동일하다고 주장하려면 당시 커밋과 설정을 별도로 확인해야 합니다.
 
 ## 현재 상태 / 미구현
 

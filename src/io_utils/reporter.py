@@ -1,6 +1,6 @@
 """
 파이프라인 결과를 터미널에 단계별로 출력한다.
-터미널 출력(사람용)과 results.json(분석용)은 분리한다.
+터미널 출력(사람용)과 results.jsonl(분석용)은 분리한다.
 """
 
 from typing import Optional
@@ -40,12 +40,14 @@ def report_segment(
             f" [yellow]{trigger_name}[/yellow] ({trigger_reason})  level=[bold]{level}[/bold]"
         )
     else:
-        console.print(f" [bold green]TRIGGER    [/bold green] — (정상)  level=[bold]{level}[/bold]")
+        # 미선택은 객관적 정상 라벨이 아니다. 논문에서도 미선택 299개 중
+        # 105개가 강제 평가 시 caution/anomaly로 출력됐다.
+        console.print(f" [bold dim]TRIGGER    [/bold dim] — (미선택)  level=[bold]{level}[/bold]")
 
-    # 기존 터미널 라벨 AGENT는 선택적 LLM 판정 단계와 호출 생략 여부를 표시한다.
+    # 선택적 LLM 판정 단계와 호출 생략 여부를 표시한다.
     if agent_output:
         console.print(
-            f" [bold magenta]AGENT      [/bold magenta]"
+            f" [bold magenta]LLM        [/bold magenta]"
             f" 호출됨 (트리거: {trigger_name})"
         )
         assess     = agent_output.get("assessment", "?")
@@ -56,6 +58,6 @@ def report_segment(
         console.print(f"   [dim]├ judgment {judgment}[/dim]")
         console.print(f"   [dim]└ action   {action}[/dim]")
     else:
-        console.print(f" [bold dim]AGENT      [/bold dim] skip")
+        console.print(f" [bold dim]LLM        [/bold dim] skip")
 
     console.print()

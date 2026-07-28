@@ -53,10 +53,10 @@
 
   // ── 파생 통계 (카드 4개) ──
   let totalSegments = $derived(entries.length);
-  let triggeredEntries = $derived(entries.filter((e) => e.agent !== null && e.agent !== undefined));
-  let triggerCount = $derived(triggeredEntries.length);
+  let llmCallEntries = $derived(entries.filter((e) => e.agent !== null && e.agent !== undefined));
+  let llmCallCount = $derived(llmCallEntries.length);
   let latencies = $derived(
-    triggeredEntries
+    llmCallEntries
       .map((e) => e.agent.agent_elapsed_sec)
       .filter((v) => typeof v === 'number')
   );
@@ -66,9 +66,9 @@
   let p95Latency = $derived(percentile(latencies, 0.95));
   let latestEntry = $derived(entries.length ? entries[entries.length - 1] : null);
   let activeTriggers = $derived(
-    Object.keys(TRIGGER_LABELS).filter((type) => triggeredEntries.some((e) => e.trigger === type))
+    Object.keys(TRIGGER_LABELS).filter((type) => entries.some((e) => e.trigger === type))
   );
-  let triggerRate = $derived(totalSegments ? triggerCount / totalSegments : null);
+  let llmCallRate = $derived(totalSegments ? llmCallCount / totalSegments : null);
 
   function percentile(values, p) {
     if (values.length === 0) return null;
@@ -217,14 +217,14 @@
     if (!latencyCanvas) return;
 
     const inkColor = cssVar('--text-h');
-    const points = triggeredEntries
+    const points = llmCallEntries
       .filter((e) => typeof e.agent.agent_elapsed_sec === 'number')
       .map((e) => ({ x: e.timestamp, y: e.agent.agent_elapsed_sec }));
 
     const data = {
       datasets: [
         {
-          label: 'agent_elapsed_sec',
+          label: 'LLM latency',
           data: points,
           borderColor: inkColor,
           backgroundColor: inkColor,
@@ -298,12 +298,12 @@
           <div class="card-value">{totalSegments}</div>
         </div>
         <div class="card">
-          <div class="card-label">트리거</div>
-          <div class="card-value">{triggerCount}</div>
+          <div class="card-label">LLM 호출</div>
+          <div class="card-value">{llmCallCount}</div>
         </div>
         <div class="card">
-          <div class="card-label">트리거 비율</div>
-          <div class="card-value">{fmtPct(triggerRate)}</div>
+          <div class="card-label">호출 비율</div>
+          <div class="card-value">{fmtPct(llmCallRate)}</div>
         </div>
         <div class="card">
           <div class="card-label">평균 latency</div>
@@ -322,7 +322,7 @@
 
     <aside class="side-panel">
       <div class="level-distribution">
-        <h3>레벨 분포</h3>
+        <h3>규칙 기반 level 분포</h3>
         {#if levelTotal > 0}
           <div class="level-bar">
             {#each Object.keys(LEVEL_LABELS) as lvl}
@@ -393,7 +393,7 @@
 
     <div class="chart-card">
       <div class="section-head">
-        <h3>Agent latency</h3>
+        <h3>LLM latency</h3>
         <span>{latencies.length} calls</span>
       </div>
       <div class="chart-wrap">
@@ -417,8 +417,8 @@
           <th>trigger_reason</th>
           <th>assessment</th>
           <th>action</th>
-          <th>agent_elapsed_sec</th>
-          <th>api_round_trips</th>
+          <th>LLM latency (s)</th>
+          <th>기록된 API 응답 수</th>
         </tr>
       </thead>
       <tbody>

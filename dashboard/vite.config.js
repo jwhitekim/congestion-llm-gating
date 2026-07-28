@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// congestion-agent가 항상 <repo root>/outputs/에 세션을 쓴다(io_utils/session.py의
+// 선택적 LLM 호출 워크플로우가 <repo root>/outputs/에 세션을 쓴다(io_utils/session.py의
 // OUTPUTS_DIR). 대시보드는 사용자가 폴더를 선택하지 않고 이 고정 경로만 읽는다.
 const OUTPUTS_DIR = path.resolve(__dirname, '..', 'outputs')
 

@@ -79,8 +79,8 @@ class ThresholdHistory:
     """
     density/zone_max percentile 계산 전용 긴 히스토리.
 
-    SegmentHistory(HISTORY_WINDOW=30초=7세그먼트짜리 짧은 링버퍼, surge의 직전 평균
-    비율과 density_slope 전용)와는 목적이 다르다 — percentile은 표본 7개로는 너무
+    SegmentHistory(HISTORY_WINDOW=30초=직전 6세그먼트, 현재값을 기울기 계산에
+    더하면 최대 7포인트)와는 목적이 다르다 — percentile은 이 표본 수로는 너무
     불안정해서 별도로 분리했다.
 
     무한 누적 대신 최근 PERCENTILE_HISTORY_MAXLEN(기본 100세그먼트 ≈ 8.3분) 창으로

@@ -13,6 +13,8 @@ OUTPUTS_DIR = Path("outputs")
 
 
 def _config_snapshot() -> dict:
+    # 현재는 일부 규칙/구간 설정만 기록한다. detector/LLM 모델, provider,
+    # temperature까지 포함한 완전한 논문 재현 설정은 아니다.
     return {
         "SURGE_RATIO": config.SURGE_RATIO,
         "SPEED_MIN": config.SPEED_MIN,

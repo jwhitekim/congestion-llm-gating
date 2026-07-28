@@ -1,9 +1,10 @@
 """
 향후 LLM tool-use 확장을 위한 관측 도구 레지스트리.
 
-현재 논문 구현에서는 TOOL_ONLY가 비어 있어 도구를 호출하지 않는다.
-새 도구 추가 방법: 이 패키지에 파일을 하나 추가하고 함수에
-@register_tool(...)을 붙이면 된다. 이 파일이나 loop.py는 건드릴 필요 없다.
+현재 논문 구현에서는 등록된 도구가 없고 provider/loop의 tool-use 경로도
+제거돼 있어 LLM이 외부 도구를 호출하지 않는다. 이 registry는 도구 파일을
+자동 등록하는 기반만 제공하며, 파일과 @register_tool(...)을 추가하는 것만으로
+LLM tool-use가 활성화되지는 않는다.
 """
 
 import importlib

@@ -27,13 +27,11 @@ class AggregatedFacts:
 
 # PerceptionResult/AggregatedFacts 필드를 LLM에게 어떤 경로로 노출할지 결정하는
 # 유일한 지점. 이전에는 이 판단이 track_people tool 안, _facts_to_text 안 등
-# 코드 곳곳에 흩어져 즉흥적으로 결정되고 반복적으로 뒤집혔다 — 여기 한 곳으로
-# 모아 강제한다. 세 집합은 서로 배타적이어야 하며 각 필드는 정확히 하나에만
-# 속해야 한다.
+# 코드 곳곳에 흩어져 즉흥적으로 결정되고 반복적으로 뒤집혔다. 세 집합은
+# 서로 배타적이어야 하며, 각 필드는 정확히 하나에 속하도록 관리한다.
 #
-# always/tool 분류 기준(매번 필요한 aggregate vs 가끔만 필요한 granular)은
-# 자동으로 답을 주지 않으며 여전히 사람 판단이 필요함. NOT_EXPOSED는 애초에
-# 판단 입력이 아닌 로깅/연구용 필드.
+# assert는 집합 간 중복만 검사한다. dataclass의 모든 필드가 정확히 한 집합에
+# 들어갔는지는 새 필드를 추가할 때 별도로 확인해야 한다.
 
 ALWAYS_VISIBLE = {
     "total", "density", "avg_speed", "zone_counts",
@@ -54,13 +52,10 @@ TOOL_ONLY: set[str] = set()  # 지금 비어있음. granular/개별 데이터(�
 
 NOT_EXPOSED = {
     "tracks", "cv_elapsed_sec",
-    "timestamp",  # 판단 입력이 아니므로 tracks/cv_elapsed_sec와 같은 이유로
-                  # 추가함(사용자가 준 목록엔 없었던 항목 — 세그먼트
-                  # 시각은 congestion 판단과 무관한 로깅/식별용이라 같은
-                  # 분류가 맞다고 판단했다. 의도와 다르면 알려줄 것).
-}  # LLM에 어떤 경로로도 안 감. tracks는 tool_raw 연구 보존용 원본 좌표,
-   # cv_elapsed_sec는 성능 로깅용. 둘 다 판단 입력이 아니므로 always/tool
-   # 어느 쪽에도 넣지 말 것.
+    # 현재 브랜치는 timestamp를 로깅용으로만 둔다. 이는 세그먼트 시각도 LLM에
+    # 전달했다고 서술한 논문 방법과 다른 지점이므로 재현 설정에서 구분해야 한다.
+    "timestamp",
+}  # LLM에 전달하지 않는 로깅/연구용 필드.
 
 assert (
     not (ALWAYS_VISIBLE & TOOL_ONLY)

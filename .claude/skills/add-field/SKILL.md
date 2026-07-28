@@ -10,7 +10,8 @@ description: 새 perception 필드나 tool을 추가할 때 datatypes.py의 노�
    - 가끔만 필요한 granular 값 → `TOOL_ONLY`
    - 로깅/연구 전용 → `NOT_EXPOSED`
 2. 세 집합이 서로 배타적인지(assert 통과하는지) 확인한다
-3. `loop.py`나 개별 tool 파일 안에서 노출 여부를 따로 판단하는 코드가 생기지 않았는지 확인한다 — 레지스트리가 유일한 결정 지점이어야 한다
-4. 판단(assessment/action) 로직이 tool의 `run()` 안에 섞여 들어가지 않았는지 확인한다 — tool은 관측값만 반환한다
+3. dataclass의 새 필드가 정확히 한 집합에 포함됐는지 수동으로 확인한다
+4. `loop.py`에서 노출 여부를 따로 판단하는 코드가 생기지 않았는지 확인한다
+5. `agent/tools/`의 registry만으로는 tool-use가 동작하지 않음을 확인한다. 도구 선택을 구현하려면 provider와 `agent/loop.py`의 실행 경로를 함께 다룬다
 
 등록 위치가 애매하면 임의로 정해서 진행하지 말고 먼저 물어본다.

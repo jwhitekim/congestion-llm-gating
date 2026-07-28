@@ -9,12 +9,12 @@ result.plot() 등 진단에 필요한 raw 접근이 필요해서다.
 추가로 앞 COMPARE_FRAMES 프레임을 순회하며 detector.detect()의 raw box 개수와
 tracker.update()의 confirmed track 개수를 비교한다. raw box는 많은데
 confirmed track이 적으면 detector가 아니라 tracker(OC-SORT) 단계에서
-유실되고 있다는 뜻이다 — capdi는 실제 Detector 클래스를 그대로 쓰고
-(모델 경로가 config에 고정돼 있어서), COCO 비교군은 동일한 detect()
-인터페이스를 갖는 _RawDetector로 모델 경로만 바꿔 낀다. tracker는 두
-모델 모두 perception.tracker.Tracker를 그대로 사용한다.
+유실될 가능성을 점검해야 한다. `Detector`는 `YOLO_MODEL_CHOICE`에 따라 모델을
+고르므로 capdi 경로를 진단하려면 `YOLO_MODEL_CHOICE=fine_tuned`로 실행한다.
+COCO 비교군은 동일한 detect() 인터페이스를 갖는 _RawDetector로 모델 경로만
+바꿔 낀다. tracker는 두 모델 모두 perception.tracker.Tracker를 사용한다.
 
-사용법: PYTHONPATH=src python scripts/diagnose_detector.py [프레임번호]
+사용법: YOLO_MODEL_CHOICE=fine_tuned PYTHONPATH=src python scripts/diagnose_detector.py [프레임번호]
 """
 
 import os
@@ -76,8 +76,9 @@ def _diagnose(label: str, model_path: str, frame, output_path: str) -> None:
 class _RawDetector:
     """
     perception.detector.Detector와 동일한 detect() 인터페이스를 갖되 모델 경로를
-    바꿔 낄 수 있게 한 진단 전용 래퍼. 실제 Detector는 모델 경로가
-    config.YOLO_FINE_TUNED_MODEL_NAME에 고정돼 있어 COCO 비교군엔 쓸 수 없어서 필요하다.
+    바꿔 낄 수 있게 한 진단 전용 래퍼. 실제 Detector는 전역
+    config.ACTIVE_YOLO_MODEL을 사용하므로 한 프로세스에서 두 가중치를 동시에
+    비교하기 위해 필요하다.
     """
 
     def __init__(self, model_path: str):

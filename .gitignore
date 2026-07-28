@@ -19,3 +19,4 @@ models/
 outputs/
 nohup.out
 *.pdf
+DESIGN_LOG.md

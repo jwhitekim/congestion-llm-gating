@@ -17,29 +17,23 @@ paths:
 
 - LLM은 **텍스트/숫자만** 입력받는다. 이미지·픽셀은 절대 전달하지 않는다(`agent/loop.py`의 `_facts_to_text`가 유일한 입력 경로). VLM을 쓰지 않는 건 우회 가능성을 구조적으로 차단하기 위함이지 비용 절감이 아니다.
 - `agent/schema.py`의 `REQUIRED_FIELDS`에는 숫자 카운트 필드가 없다. 숫자는 **코드가 perception 관측값에서 직접 주입**한다(`loop.py`의 `validated["total_people"] = facts.current.total`). `_FORBIDDEN_NUMERIC` 방어를 제거하지 말 것. 단, `reasoning`은 자유 텍스트라 LLM이 그 안에 틀린 숫자를 재서술하는 것까지는 막지 못한다 — 알려진 한계.
-- `tool_raw`는 호출 원본을 그대로 보존한다(연구용). 요약/폐기 금지.
-- 새 tool의 `run(facts, **kwargs) -> dict`는 관측값만 반환. 판단(assessment/action)을 생산하면 안 된다.
+- 현재 `tool_raw`는 과거 결과 스키마 호환용 빈 배열이다. 실제 tool 호출
+  원본이 저장되고 있다고 서술하지 않는다.
 
 ## 노출 레지스트리 (`datatypes.py`)
 
-`ALWAYS_VISIBLE` / `TOOL_ONLY` / `NOT_EXPOSED` 세 집합이 필드 노출 여부를 유일하게 결정한다(서로 배타적, assert 강제). 새 perception 필드를 추가할 때는 반드시 여기 먼저 등록 — `loop.py`나 tool 파일에서 개별적으로 노출 여부를 판단하지 말 것. `ALWAYS_VISIBLE`/`TOOL_ONLY` 분류 기준은 이 레지스트리가 자동으로 답을 주지 않는다 — 사람 판단 필요. `NOT_EXPOSED`는 로깅/연구용(`tracks`, `cv_elapsed_sec`, `timestamp`).
+`ALWAYS_VISIBLE` / `TOOL_ONLY` / `NOT_EXPOSED` 세 집합이 필드 노출 여부를 결정한다.
+assert는 집합 간 중복만 검사하므로, 새 perception 필드가 정확히 한 집합에
+포함됐는지는 별도로 확인한다. `timestamp`가 현재 `NOT_EXPOSED`라는 사실은
+세그먼트 시각도 LLM에 전달했다는 논문 서술과 다르므로 숨기지 않는다.
 
 ## registry + interface 패턴
 
-현재 `TOOL_ONLY`와 tool-use 루프가 비어 있어 LLM은 외부 도구를 호출하지 않는다.
-향후 도구 선택 기능을 구현할 때 tool-use 기반을 먼저 복원하고, 그 이후의 새
-tool은 기존 파일(`loop.py`, `agent/tools/__init__.py`) 수정 없이
-`agent/tools/`에 파일 하나만 추가하면 자동 등록돼야 한다.
-
-```python
-from . import register_tool
-
-@register_tool(name="...", description="...", input_schema={...})
-def my_tool(facts: AggregatedFacts, **kwargs) -> dict:
-    ...
-```
-
-`agent/tools/__init__.py`가 `pkgutil.iter_modules`로 자동 import한다. 현재 registry가 존재한다는 사실을 실제 tool-use가 구현된 것으로 서술하지 않는다. 기반 복원 후에도 `loop.py`가 개별 도구를 import하거나 if/elif로 분기하면 이 패턴이 깨진다.
+현재 `TOOL_ONLY`와 등록된 도구 파일이 비어 있고 provider/`agent/loop.py`의
+tool-use 경로도 없어 LLM은 외부 도구를 호출하지 않는다.
+`agent/tools/__init__.py`의 자동 등록 registry는 남아 있지만 현재 판정 경로와
+연결돼 있지 않다. 향후 도구 선택 기능을 구현할 때 provider 변환과 반복 루프를
+함께 복원한다.
 
 ## action 레이어 (향후 확장 — 현재 미구현)
 

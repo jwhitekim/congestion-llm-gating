@@ -5,10 +5,9 @@ LLM은 판단(assessment, reasoning, action)만 생산한다.
 숫자 사실(total_people, density 등)은 LLM 출력 스키마에 없으며
 코드가 facts에서 직접 주입한다.
 
-tool은 없다 (datatypes.TOOL_ONLY가 비어있는 동안은) — 왕복은 항상 1회.
-TOOL_ONLY가 채워지면 agent/tools/에 도구를 추가하고 이 파일에 tool_use
-루프를 다시 들여야 한다 (agent/tools/__init__.py의 레지스트리 패턴은
-그대로 남아있다).
+외부 tool 호출과 self-correction 루프는 없다. 선택된 세그먼트마다 판단은
+한 번 생성하지만, 일시적인 API 실패에는 전송을 재시도할 수 있다.
+agent/tools/의 registry는 남아 있으나 현재 provider/loop 경로와 연결돼 있지 않다.
 """
 
 import json
@@ -150,10 +149,11 @@ def run(
       - LLM 판단 필드 (schema.py 참고: assessment/distribution_summary/reasoning/action)
       - total_people, density, congestion_level, local_hotspots: 코드가 facts에서
         주입 (LLM 생산 아님)
-      - tool_called, tool_raw, duplicate_tool_calls: tool이 없으므로 항상
-        False/[]/False — 대시보드/analyze_bottleneck.py 호환을 위해 필드는 유지
-      - api_call_breakdown: list[dict]  (연구용, API 왕복별 시간/토큰/stop_reason.
-        single-shot이므로 원소는 항상 1개)
+      - tool_called, tool_raw, duplicate_tool_calls: 과거 결과 스키마 호환용
+        False/[]/False. 현재 tool 호출 기록이 아니다
+      - api_call_breakdown: 성공 응답의 시간/토큰/stop_reason을 담은 원소 1개.
+        재시도가 있었다면 elapsed_sec에는 재시도와 backoff가 포함될 수 있지만
+        각 실패 시도는 별도 원소로 기록하지 않는다
     """
     trigger_line = (
         f"트리거 발생: {trigger_name} ({trigger_reason})"
@@ -201,6 +201,6 @@ def run(
     validated["trigger"] = trigger_name
     validated["tool_called"] = False
     validated["tool_raw"] = []
-    validated["api_call_breakdown"] = api_call_log  # 연구용 raw, 절대 버리지 마라
+    validated["api_call_breakdown"] = api_call_log
     validated["duplicate_tool_calls"] = False
     return validated
