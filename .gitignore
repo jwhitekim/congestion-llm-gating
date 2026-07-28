@@ -18,5 +18,10 @@ models/
 # Run outputs
 outputs/
 nohup.out
+
+# Documentation
 *.pdf
 DESIGN_LOG.md
+
+# DS_Store
+.DS_Store
