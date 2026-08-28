@@ -7,15 +7,19 @@ load_dotenv()
 MODEL_DIR = "models"
 LEGACY_MODEL_DIR = "legacy_weights"  # 기본으로는 안 쓰지만 비교/롤백용으로 남겨둔 가중치
 YOLO_BASE_MODEL_NAME = "yolov8m.pt"
+YOLO_SMALL_MODEL_NAME = "yolov8s.pt"
 YOLO_FINE_TUNED_MODEL_NAME = "capdi-y8m-640-crowdah-v1-fp32-pt-20250609.pt"
 
-# 실제 로드에 쓰이는 모델 선택. "base" | "fine_tuned". 둘 다 위 이름을 그대로 참조하므로
-# capdi를 지우지 않고 비교/롤백 가능.
+# 실제 로드에 쓰이는 모델 선택. "base" | "small" | "fine_tuned".
+# capdi만 비교/롤백용으로 legacy_weights/에 따로 보관한다.
 YOLO_MODEL_CHOICE = os.getenv("YOLO_MODEL_CHOICE", "base")
-ACTIVE_YOLO_MODEL = (
-    YOLO_BASE_MODEL_NAME if YOLO_MODEL_CHOICE == "base" else YOLO_FINE_TUNED_MODEL_NAME
-)
-ACTIVE_MODEL_DIR = MODEL_DIR if YOLO_MODEL_CHOICE == "base" else LEGACY_MODEL_DIR
+_YOLO_MODEL_NAMES = {
+    "base": YOLO_BASE_MODEL_NAME,
+    "small": YOLO_SMALL_MODEL_NAME,
+    "fine_tuned": YOLO_FINE_TUNED_MODEL_NAME,
+}
+ACTIVE_YOLO_MODEL = _YOLO_MODEL_NAMES[YOLO_MODEL_CHOICE]
+ACTIVE_MODEL_DIR = LEGACY_MODEL_DIR if YOLO_MODEL_CHOICE == "fine_tuned" else MODEL_DIR
 
 # --- Pipeline ---
 SEGMENT_INTERVAL = 5.0  # seconds between PerceptionResult emissions

@@ -31,7 +31,7 @@ pip install -r requirements.txt
 make install   # dashboard/ npm 의존성 설치
 ```
 
-`requirements.txt`는 CUDA 12.6 GPU 빌드 `torch`/`torchvision`과 `ultralytics`(YOLOv8), `ocsort`를 설치합니다. GPU 환경(CUDA)을 권장합니다. YOLO 모델은 `config.YOLO_MODEL_CHOICE`에 따라 COCO 사전학습 `yolov8m.pt`(`models/`, 기본값) 또는 `legacy_weights/`의 fine-tuned 가중치(capdi)를 사용합니다 — capdi는 기본 경로가 아니지만 비교/롤백용으로 남겨둔 것이라 삭제하지 않습니다. `make install`은 `npm --prefix dashboard install`만 실행하고 Python 의존성 설치는 안내만 합니다 — GPU 빌드 선택이 걸린 설치라 자동으로 실행하지 않습니다.
+`requirements.txt`는 CUDA 12.6 GPU 빌드 `torch`/`torchvision`과 `ultralytics`(YOLOv8), `ocsort`를 설치합니다. GPU 환경(CUDA)을 권장합니다. YOLO 모델은 `config.YOLO_MODEL_CHOICE`("base" | "small" | "fine_tuned")에 따라 `models/`의 COCO 사전학습 `yolov8m.pt`(기본값) 또는 `yolov8s.pt`, 혹은 `legacy_weights/`의 fine-tuned 가중치(capdi)를 사용합니다 — capdi는 기본 경로가 아니지만 비교/롤백용으로 남겨둔 것이라 삭제하지 않습니다. `make install`은 `npm --prefix dashboard install`만 실행하고 Python 의존성 설치는 안내만 합니다 — GPU 빌드 선택이 걸린 설치라 자동으로 실행하지 않습니다.
 
 LLM 판정에는 `ANTHROPIC_API_KEY` 환경변수가 필요합니다(`anthropic` SDK, 기본 모델: `claude-sonnet-4-6`, `ANTHROPIC_MODEL`로 override 가능). 실험적으로 Gemini도 지원합니다 — `AGENT_PROVIDER=gemini`로 설정하면 `google-genai` SDK로 기본 `gemini-3.5-flash`(`GEMINI_MODEL`로 override 가능, `GEMINI_API_KEY` 필요)를 대신 호출합니다. 두 프로바이더 모두 `agent/providers/`의 duck-typing 인터페이스(`init_state/send/extract_text/extract_usage/is_retryable`)만 구현하면 되므로, 새 프로바이더를 추가해도 `agent/loop.py`는 건드릴 필요가 없습니다.
 
