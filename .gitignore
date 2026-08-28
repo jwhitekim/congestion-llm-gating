@@ -8,6 +8,10 @@
 
 # Models and Meta Data files
 models/
+legacy_weights/
+
+# Raw dataset downloads
+raw_data/
 
 # Environment files
 *.env

@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from PIL import Image
 
-image_folder = '../datasets/department_store'
+image_folder = '../raw_data/mall_dataset/frames/frames'
 output_video = '../videos/department_store.mp4'
 
 images = sorted([img for img in os.listdir(image_folder) if img.lower().endswith(".jpg")])

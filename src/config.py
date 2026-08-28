@@ -5,6 +5,7 @@ load_dotenv()
 
 # --- Model ---
 MODEL_DIR = "models"
+LEGACY_MODEL_DIR = "legacy_weights"  # 기본으로는 안 쓰지만 비교/롤백용으로 남겨둔 가중치
 YOLO_BASE_MODEL_NAME = "yolov8m.pt"
 YOLO_FINE_TUNED_MODEL_NAME = "capdi-y8m-640-crowdah-v1-fp32-pt-20250609.pt"
 
@@ -14,6 +15,7 @@ YOLO_MODEL_CHOICE = os.getenv("YOLO_MODEL_CHOICE", "base")
 ACTIVE_YOLO_MODEL = (
     YOLO_BASE_MODEL_NAME if YOLO_MODEL_CHOICE == "base" else YOLO_FINE_TUNED_MODEL_NAME
 )
+ACTIVE_MODEL_DIR = MODEL_DIR if YOLO_MODEL_CHOICE == "base" else LEGACY_MODEL_DIR
 
 # --- Pipeline ---
 SEGMENT_INTERVAL = 5.0  # seconds between PerceptionResult emissions

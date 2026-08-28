@@ -17,10 +17,16 @@
     "deny": [
       "Read(**/*.env)",
       "Read(**/models/**)",
+      "Read(**/legacy_weights/**)",
+      "Read(**/raw_data/**)",
       "Bash(rm -rf *)",
       "Bash(git push --force*)",
       "Bash(git push -f*)"
     ],
     "defaultMode": "acceptEdits"
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
   }
 }

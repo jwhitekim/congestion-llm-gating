@@ -31,7 +31,7 @@ pip install -r requirements.txt
 make install   # dashboard/ npm 의존성 설치
 ```
 
-`requirements.txt`는 CUDA 12.6 GPU 빌드 `torch`/`torchvision`과 `ultralytics`(YOLOv8), `ocsort`를 설치합니다. GPU 환경(CUDA)을 권장합니다. YOLO 모델은 `config.YOLO_MODEL_CHOICE`에 따라 COCO 사전학습 `yolov8m.pt` 또는 `models/`의 fine-tuned 가중치를 사용합니다. `make install`은 `npm --prefix dashboard install`만 실행하고 Python 의존성 설치는 안내만 합니다 — GPU 빌드 선택이 걸린 설치라 자동으로 실행하지 않습니다.
+`requirements.txt`는 CUDA 12.6 GPU 빌드 `torch`/`torchvision`과 `ultralytics`(YOLOv8), `ocsort`를 설치합니다. GPU 환경(CUDA)을 권장합니다. YOLO 모델은 `config.YOLO_MODEL_CHOICE`에 따라 COCO 사전학습 `yolov8m.pt`(`models/`, 기본값) 또는 `legacy_weights/`의 fine-tuned 가중치(capdi)를 사용합니다 — capdi는 기본 경로가 아니지만 비교/롤백용으로 남겨둔 것이라 삭제하지 않습니다. `make install`은 `npm --prefix dashboard install`만 실행하고 Python 의존성 설치는 안내만 합니다 — GPU 빌드 선택이 걸린 설치라 자동으로 실행하지 않습니다.
 
 LLM 판정에는 `ANTHROPIC_API_KEY` 환경변수가 필요합니다(`anthropic` SDK, 기본 모델: `claude-sonnet-4-6`, `ANTHROPIC_MODEL`로 override 가능). 실험적으로 Gemini도 지원합니다 — `AGENT_PROVIDER=gemini`로 설정하면 `google-genai` SDK로 기본 `gemini-3.5-flash`(`GEMINI_MODEL`로 override 가능, `GEMINI_API_KEY` 필요)를 대신 호출합니다. 두 프로바이더 모두 `agent/providers/`의 duck-typing 인터페이스(`init_state/send/extract_text/extract_usage/is_retryable`)만 구현하면 되므로, 새 프로바이더를 추가해도 `agent/loop.py`는 건드릴 필요가 없습니다.
 
@@ -51,6 +51,8 @@ make run VIDEO=videos/supermarket.mp4     # 다른 영상 지정
 ```
 
 `make run`은 `PYTHONPATH=src python src/main.py $(VIDEO)`를 실행합니다 — 패키지 설치 없이 `src/`를 `PYTHONPATH`에 직접 넣는 구조라 `make` 없이도 그 명령을 직접 실행하면 동일하게 동작합니다.
+
+`videos/department_store.mp4`는 `raw_data/mall_dataset/`(Mall Dataset 원본 프레임·GT)을 `scripts/generate_video.py`로 1fps 재구성한 영상입니다. `videos/other_test.mp4`는 Mall Dataset과 무관한 별도 유튜브 테스트 영상입니다.
 
 실행마다 `outputs/<timestamp>/` 세션 폴더가 새로 생성됩니다. `session.json`은 세션 메타데이터(시작/종료 시각, 일부 임계값의 config snapshot)를, `results.jsonl`은 세그먼트별 결과를 한 줄씩 즉시 기록합니다 — 트리거되지 않은 세그먼트도 기존 스키마 필드인 `agent: null`로 포함하고, 트리거가 발생했다면 `trigger_reason`도 함께 남깁니다. 현재 선택적 호출 프롬프트에는 트리거 이름과 정량적 근거가 포함되며, 이 정보가 LLM 판정에 영향을 줄 수 있다는 점은 논문의 한계입니다. `scripts/ab_trigger_reason.py`는 그중 정량적 `trigger_reason` 문장 유무만 비교하며 트리거 프라이밍 전체를 제거하는 실험은 아닙니다.
 
