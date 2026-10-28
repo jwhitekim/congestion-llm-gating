@@ -16,3 +16,4 @@ install:
 	@echo ""
 	@echo "Python 의존성은 별도로 설치해야 합니다:"
 	@echo "  pip install -r requirements.txt"
+	@echo "  pip install --no-deps ocsort==0.0.2"

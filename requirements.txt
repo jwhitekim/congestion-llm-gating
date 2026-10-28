@@ -39,6 +39,8 @@ ultralytics-thop==2.0.17
 umf==0.11.0
 urllib3==2.5.0
 
-lapx --break-system-packages
-ocsort==0.0.2 --break-system-packages --no-deps
-filterpy==1.4.5 --break-system-packages
+python-dotenv
+lapx
+filterpy==1.4.5
+# ocsort==0.0.2는 scipy==1.9.3·lap==0.4.0을 고정하므로 여기 넣지 않고 따로 설치한다:
+#   pip install --no-deps ocsort==0.0.2
